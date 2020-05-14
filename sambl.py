@@ -27,6 +27,24 @@ sp = SamblServiceProvider()
 app = Flask(__name__)
 app.config.from_envvar('SAMBL_SETTINGS')
 
+app.config['SAML2_SP'] = {
+    'certificate': certificate_from_string(app.config["SAML2_SP_CERTIFICATE"]),
+    'private_key': private_key_from_string(app.config["SAML2_SP_PRIVATE_KEY"]),
+}
+
+app.config['SAML2_IDENTITY_PROVIDERS'] = [
+    {
+        'CLASS': 'flask_saml2.sp.idphandler.IdPHandler',
+        'OPTIONS': {
+            'display_name': app.config["SAML2_IDP_DISPLAY_NAME"],
+            'entity_id': app.config["SAML2_IDP_ENTITY_ID"],
+            'sso_url': app.config["SAML2_IDP_SSO_URL"],
+            'slo_url': app.config["SAML2_IDP_SLO_URL"],
+            'certificate': certificate_from_string(app.config["SAML2_IDP_CERTIFICATE"]),
+        },
+    },
+]
+
 #lp = LoadParm()
 #creds = Credentials()
 #creds.guess(lp)
