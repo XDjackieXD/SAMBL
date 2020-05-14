@@ -2,6 +2,8 @@
 import sys
 import os
 
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 from flask import Flask, url_for
 from flask_saml2.sp import ServiceProvider
 from flask_saml2.sp.idphandler import IdPHandler
@@ -20,11 +22,11 @@ from samba.ndr import ndr_pack, ndr_unpack
 from samba.param import LoadParm
 from samba.samdb import SamDB
 
-def _force_https():
-    from flask import _request_ctx_stack
-    if _request_ctx_stack is not None:
-        reqctx = _request_ctx_stack.top
-        reqctx.url_adapter.url_scheme = 'https'
+#def _force_https():
+#    from flask import _request_ctx_stack
+#    if _request_ctx_stack is not None:
+#        reqctx = _request_ctx_stack.top
+#        reqctx.url_adapter.url_scheme = 'https'
 
 
 class SamblServiceProvider(ServiceProvider):
@@ -54,7 +56,8 @@ class SamblIdPHandler(IdPHandler):
 sp = SamblServiceProvider()
 
 app = Flask(__name__)
-app.before_request(_force_https)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1)
+#app.before_request(_force_https)
 app.config.from_envvar('SAMBL_SETTINGS')
 
 app.config['SAML2_SP'] = {
