@@ -20,6 +20,13 @@ from samba.ndr import ndr_pack, ndr_unpack
 from samba.param import LoadParm
 from samba.samdb import SamDB
 
+def _force_https():
+    from flask import _request_ctx_stack
+    if _request_ctx_stack is not None:
+        reqctx = _request_ctx_stack.top
+        reqctx.url_adapter.url_scheme = 'https'
+
+
 class SamblServiceProvider(ServiceProvider):
     def get_logout_return_url(self):
         return url_for('index', _external=True)
@@ -47,6 +54,7 @@ class SamblIdPHandler(IdPHandler):
 sp = SamblServiceProvider()
 
 app = Flask(__name__)
+app.before_request(_force_https)
 app.config.from_envvar('SAMBL_SETTINGS')
 
 app.config['SAML2_SP'] = {
