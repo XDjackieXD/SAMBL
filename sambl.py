@@ -4,7 +4,11 @@ import os
 
 from flask import Flask, url_for
 from flask_saml2.sp import ServiceProvider
+from flask_saml2.sp.idphandler import IdPHandler
 from flask_saml2.utils import certificate_from_string, private_key_from_string
+import urllib.parse as urlparse
+from urllib.parse import parse_qs
+from typing import Optional
 
 import getpass
 import ldb
@@ -23,6 +27,23 @@ class SamblServiceProvider(ServiceProvider):
     def get_default_login_return_url(self):
         return url_for('index', _external=True)
 
+class SamblIdPHandler(IdPHandler):
+    def make_login_request_url(self, relay_state: Optional[str] = None) -> str:
+        """Make a LoginRequest url and query string for this IdP."""
+        authn_request = self.get_authn_request()
+        saml_request = self.encode_saml_string(authn_request.get_xml_string())
+
+        parameters = [('SAMLRequest', saml_request)]
+        parsed = urlparse.urlparse(self.get_idp_sso_url())
+        for key,values in parse_qs(parsed.query).items():
+            for value in values:
+                parameters.append((key, value))
+        if relay_state is not None:
+            parameters.append(('RelayState', relay_state))
+
+        url = parsed.scheme + "://" + parsed.netloc + parsed.path
+        return self._make_idp_request_url(url, parameters)
+
 sp = SamblServiceProvider()
 
 app = Flask(__name__)
@@ -35,7 +56,7 @@ app.config['SAML2_SP'] = {
 
 app.config['SAML2_IDENTITY_PROVIDERS'] = [
     {
-        'CLASS': 'flask_saml2.sp.idphandler.IdPHandler',
+        'CLASS': 'sambl.SamblIdPHandler',
         'OPTIONS': {
             'display_name': app.config["SAML2_IDP_DISPLAY_NAME"],
             'entity_id': app.config["SAML2_IDP_ENTITY_ID"],
