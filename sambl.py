@@ -4,6 +4,7 @@ import os
 
 from flask import Flask, url_for
 from flask_saml2.sp import ServiceProvider
+from flask_saml2.utils import certificate_from_string, private_key_from_string
 
 import getpass
 import ldb
