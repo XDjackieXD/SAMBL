@@ -98,7 +98,7 @@ class ReusableForm(Form):
     password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[0-9])(?=.*?[#!@$%^&*()\-_+={}[\]|\\:;"'<>,.?\/]).{8,}$""")])
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
     if sp.is_user_logged_in():
         auth_data = sp.get_auth_data_in_session()
