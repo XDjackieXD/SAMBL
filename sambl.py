@@ -5,14 +5,14 @@ import re
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from flask import Flask, url_for, request, render_template, flash
+from flask import Flask, url_for, request, render_template, flash, session
 from flask_saml2.sp import ServiceProvider
 from flask_saml2.sp.idphandler import IdPHandler
 from flask_saml2.utils import certificate_from_string, private_key_from_string
 import urllib.parse as urlparse
 from urllib.parse import parse_qs
 from typing import Optional
-from wtforms import Form, TextField, TextAreaField, validators, StringField, SubmitField
+from wtforms import Form, TextField, TextAreaField, validators, StringField, SubmitField, SessionCSRF
 
 import getpass
 import ldb
@@ -95,21 +95,23 @@ creds.set_password(app.config["SAMBA_PASSWORD"])
 #sambl.samdb.newuser(username="test", password="Changeme!", surname="testsn", givenname="testgiven", mailaddress="test@racing.tuwien.ac.at")
 #samdb.connect(url=sambl.config.url)
 
-csrf_rand = os.urandom(32)
-
 class ReusableForm(Form):
     #password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[0-9])(?=.*?[#!@$%^&*()\-_+={}[\]|\\:;"'<>,.?\/]).{8,}$""")])
     password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""(?=^[A-Za-z\d!@#\$%\^&\*\(\)_\+=]{8,20}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+=])(?=.*[a-z])|(?=.*[!@#\$%\^&\*\(\)_\+=])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[!@#\$%\^&\*\(\)_\+=]))^.*""")])
     class Meta:
         csrf = True
-        csrf_secret = csrf_rand
+        csrf_secret = app.config["CSRF_SECRET"]
+        csrf_class = SessionCSRF
+        @property
+        def csrf_context(self):
+            return session
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if sp.is_user_logged_in():
         auth_data = sp.get_auth_data_in_session()
 
-        form = ReusableForm(request.form, meta={'csrf_context': request.session})
+        form = ReusableForm(request.form)
         if request.method == 'POST':
             if form.validate():
                 if "name" in auth_data.attributes.items() and "surname" in auth_data.attributes.items():
