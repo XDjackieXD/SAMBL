@@ -111,21 +111,24 @@ class ReusableForm(Form):
 def index():
     if sp.is_user_logged_in():
         auth_data = sp.get_auth_data_in_session()
+        saml_items = auth_data.attributes.items()
 
         form = ReusableForm(request.form)
         if request.method == 'POST':
             if form.validate():
-                if "name" in auth_data.attributes.items() and "surname" in auth_data.attributes.items():
+                if ("name" in saml_items) and ("surname" in saml_items):
                     if re.search('^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,}$', auth_data.nameid):
                         print(request.form['password'])
                         print(auth_data.nameid)
-                        print(auth_data.attributes.items()["name"])
-                        print(auth_data.attributes.items()["surname"])
+                        print(saml_items["name"])
+                        print(saml_items["surname"])
                         flash("Password set successfully")
                     else:
                         flash("Error: Invalid e-mail address")
                 else:
                     flash("Error: Name or surname not set")
+                    print(saml_items["name"])
+                    print(saml_items["surname"])
             else:
                 flash('Error: Password does not meet complexity criteria')
 
