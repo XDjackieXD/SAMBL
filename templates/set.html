@@ -5,26 +5,31 @@
 <div class="container">
 	<h2>(re)set your password:</h2>
 	<form action="" method="post" role="form">
-		{ { form.csrf }}
+		{{ form.csrf_token }}
+		{% if form.csrf_token.errors %}
+    			<div class="warning">You have submitted an invalid CSRF token</div>
+		{% endif %}
 		<div class="form-group">
 			<label for="password">Password:</label>
 			<input type="password" class="form-control" id="password" name="password" placeholder="Enter a password." required>
 		</div>
 		<button type="submit" class="btn btn-success">Set</button>
-	</form>{% with messages = get_flashed_messages(with_categories=true) %}
-	{% if messages %}
+	</form>
+	{% with messages = get_flashed_messages(with_categories=true) %}
+		{% if messages %}
+			{% for message in messages %}
+				{% if "Error" not in message[1]: %}
+					<div class="alert alert-info">
+						<strong>Success! </strong>{{ message[1] }}
+					</div>
+				{% endif %}
 
-	{% for message in messages %}
-	{% if "Error" not in message[1]: %}
-	<div class="alert alert-info">
-	<strong>Success! </strong> { { message[1] }}</div>
-	{% endif %}
-
-	{% if "Error" in message[1]: %}
-	<div class="alert alert-warning">
-        { { message[1] }}</div>
-	{% endif %}
-	{% endfor %}
-	{% endif %}
+				{% if "Error" in message[1]: %}
+					<div class="alert alert-warning">
+						{{ message[1] }}
+					</div>
+				{% endif %}
+			{% endfor %}
+		{% endif %}
 	{% endwith %}
 </div>

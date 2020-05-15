@@ -1,10 +1,11 @@
 #!/usr/bin/python
 import sys
 import os
+import re
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from flask import Flask, url_for, request, render_template
+from flask import Flask, url_for, request, render_template, flash
 from flask_saml2.sp import ServiceProvider
 from flask_saml2.sp.idphandler import IdPHandler
 from flask_saml2.utils import certificate_from_string, private_key_from_string
@@ -95,7 +96,8 @@ creds.set_password(app.config["SAMBA_PASSWORD"])
 #samdb.connect(url=sambl.config.url)
 
 class ReusableForm(Form):
-    password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[0-9])(?=.*?[#!@$%^&*()\-_+={}[\]|\\:;"'<>,.?\/]).{8,}$""")])
+    #password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[0-9])(?=.*?[#!@$%^&*()\-_+={}[\]|\\:;"'<>,.?\/]).{8,}$""")])
+    password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""(?=^[A-Za-z\d!@#\$%\^&\*\(\)_\+=]{8,20}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+=])(?=.*[a-z])|(?=.*[!@#\$%\^&\*\(\)_\+=])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[!@#\$%\^&\*\(\)_\+=]))^.*""")])
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -106,18 +108,19 @@ def index():
         form = ReusableForm(request.form)
         if request.method == 'POST':
             if form.validate():
-                flash('Thanks for registration')
-                print(request.form['password'])
+                if "name" in auth_data.attributes.items() and "surname" in auth_data.attributes.items():
+                    if re.search('^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,}$', auth_data.nameid):
+                        print(request.form['password'])
+                        print(auth_data.nameid)
+                        print(auth_data.attributes.items()["name"])
+                        print(auth_data.attributes.items()["surname"])
+                        flash("Password set successfully")
+                    else:
+                        flash("Error: Invalid e-mail address")
+                else:
+                    flash("Error: Name or surname not set")
             else:
-                flash('Error during password validation')
-
-        print(auth_data.nameid)
-        print(auth_data.attributes.items())
-
-        #message = f'''
-        #<p>You are logged in as <strong>{auth_data.nameid}</strong>.
-        #The IdP sent back the following attributes:<p>
-        #'''
+                flash('Error: Password does not meet complexity criteria')
 
         #attrs = '<dl>{}</dl>'.format(''.join(
         #    f'<dt>{attr}</dt><dd>{value}</dd>'
