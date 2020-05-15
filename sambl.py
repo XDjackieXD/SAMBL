@@ -4,7 +4,7 @@ import os
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from flask import Flask, url_for
+from flask import Flask, url_for, request
 from flask_saml2.sp import ServiceProvider
 from flask_saml2.sp.idphandler import IdPHandler
 from flask_saml2.utils import certificate_from_string, private_key_from_string
@@ -98,43 +98,43 @@ class ReusableForm(Form):
     password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[0-9])(?=.*?[#!@$%^&*()\-_+={}[\]|\\:;"'<>,.?\/]).{8,}$""")])
 
 
-    @app.route('/', methods=['GET', 'POST'])
-    def index():
-        if sp.is_user_logged_in():
-            auth_data = sp.get_auth_data_in_session()
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if sp.is_user_logged_in():
+        auth_data = sp.get_auth_data_in_session()
 
-            form = ReusableForm(request.form)
-            if request.method == 'POST':
-                if form.validate():
-                    flash('Thanks for registration')
-                    print(request.form['password'])
-                else:
-                    flash('Error during password validation')
+        form = ReusableForm(request.form)
+        if request.method == 'POST':
+            if form.validate():
+                flash('Thanks for registration')
+                print(request.form['password'])
+            else:
+                flash('Error during password validation')
 
-            print(auth_data.nameid)
-            print(auth_data.attributes.items())
+        print(auth_data.nameid)
+        print(auth_data.attributes.items())
 
-            #message = f'''
-            #<p>You are logged in as <strong>{auth_data.nameid}</strong>.
-            #The IdP sent back the following attributes:<p>
-            #'''
+        #message = f'''
+        #<p>You are logged in as <strong>{auth_data.nameid}</strong>.
+        #The IdP sent back the following attributes:<p>
+        #'''
 
-            #attrs = '<dl>{}</dl>'.format(''.join(
-            #    f'<dt>{attr}</dt><dd>{value}</dd>'
-            #    for attr, value in auth_data.attributes.items()))
+        #attrs = '<dl>{}</dl>'.format(''.join(
+        #    f'<dt>{attr}</dt><dd>{value}</dd>'
+        #    for attr, value in auth_data.attributes.items()))
 
-            #logout_url = url_for('flask_saml2_sp.logout')
-            #logout = f'<form action="{logout_url}" method="POST"><input type="submit" value="Log out"></form>'
+        #logout_url = url_for('flask_saml2_sp.logout')
+        #logout = f'<form action="{logout_url}" method="POST"><input type="submit" value="Log out"></form>'
 
-            return render_template('set.html', form=form)
-            #return message + attrs + logout
-        else:
-            message = '<p>You are logged out.</p>'
+        return render_template('set.html', form=form)
+        #return message + attrs + logout
+    else:
+        message = '<p>You are logged out.</p>'
 
-            login_url = url_for('flask_saml2_sp.login')
-            link = f'<p><a href="{login_url}">Log in to continue</a></p>'
+        login_url = url_for('flask_saml2_sp.login')
+        link = f'<p><a href="{login_url}">Log in to continue</a></p>'
 
-            return message + link
+        return message + link
 
 
 
