@@ -12,7 +12,8 @@ from flask_saml2.utils import certificate_from_string, private_key_from_string
 import urllib.parse as urlparse
 from urllib.parse import parse_qs
 from typing import Optional
-from wtforms import Form, TextField, TextAreaField, validators, StringField, SubmitField, SessionCSRF
+from wtforms import Form, TextField, TextAreaField, validators, StringField, SubmitField
+from wtforms.csrf.session import SessionCSRF
 
 import getpass
 import ldb
