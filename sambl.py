@@ -98,7 +98,8 @@ creds.set_password(app.config["SAMBA_PASSWORD"])
 class ReusableForm(Form):
     #password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[0-9])(?=.*?[#!@$%^&*()\-_+={}[\]|\\:;"'<>,.?\/]).{8,}$""")])
     password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""(?=^[A-Za-z\d!@#\$%\^&\*\(\)_\+=]{8,20}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+=])(?=.*[a-z])|(?=.*[!@#\$%\^&\*\(\)_\+=])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[!@#\$%\^&\*\(\)_\+=]))^.*""")])
-
+    class Meta:
+        csrf = True
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
