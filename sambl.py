@@ -4,7 +4,7 @@ import os
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from flask import Flask, url_for, request
+from flask import Flask, url_for, request, render_template
 from flask_saml2.sp import ServiceProvider
 from flask_saml2.sp.idphandler import IdPHandler
 from flask_saml2.utils import certificate_from_string, private_key_from_string
