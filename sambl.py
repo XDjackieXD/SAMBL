@@ -111,7 +111,7 @@ class ReusableForm(Form):
 def index():
     if sp.is_user_logged_in():
         auth_data = sp.get_auth_data_in_session()
-        saml_items = auth_data.attributes.items()
+        saml_items = auth_data.attributes
 
         form = ReusableForm(request.form)
         if request.method == 'POST':
