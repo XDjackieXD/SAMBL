@@ -132,19 +132,19 @@ def index():
                             try:
                                 samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email)
                                 flash("Password set successfully")
-                            except ldb.LdbError as (enum, estr):
-                                print(estr)
+                            except ldb.LdbError as e:
+                                print(str(e))
 
-                                if ("LDAP_ENTRY_ALREADY_EXISTS" in estr):
+                                if ("LDAP_ENTRY_ALREADY_EXISTS" in str(e)):
                                     flash("Error: Password set failed (user already exists and create was tried instead of modify).")
                                     break
 
                                 try:
                                     samdb.connect(url=app.config["SAMBA_URL"])
                                     continue
-                                except ldb.LdbError as (enum, estr):
-                                    print(estr)
-                                    flash("Error: Password set failed due to an internal error!")
+                                except ldb.LdbError as ee:
+                                    print(str(ee))
+                                    flash("Error: Password set failed (could not connect to samba server)!")
                                     break
                                 flash("Error: Password set failed due to an internal error!")
                             except Exception as e:
