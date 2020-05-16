@@ -75,7 +75,7 @@ app.config['SAML2_IDENTITY_PROVIDERS'] = [
 
 app.register_blueprint(sp.create_blueprint(), url_prefix='/saml/')
 
-email_pattern = re.compile(r"\"?([-a-zA-Z0-9.`?{}]+@\w+\.\w+)\"?")
+email_pattern = re.compile(r"^(?:[a-zA-Z0-9!#$%&'^_`{}~-]+(?:\.[a-zA-Z0-9!#$%&'^_`{|}~-]+)*)@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$")
 
 lp = LoadParm()
 creds = Credentials()
@@ -83,11 +83,12 @@ creds.guess(lp)
 creds.set_username(app.config["SAMBA_USER"])
 creds.set_password(app.config["SAMBA_PASSWORD"])
 
-#try:
-#    samdb = SamDB(url=app.config["SAMBA_URL"], session_info=system_session(),credentials=creds, lp=lp)
-#except ldb.LdbError as e:
-#    print(e)
-#    sys.exit()
+samdb = None
+try:
+    samdb = SamDB(url=app.config["SAMBA_URL"], session_info=system_session(),credentials=creds, lp=lp)
+except ldb.LdbError as e:
+    print(e)
+    sys.exit()
 
 
 #except Exception as e:
@@ -100,7 +101,7 @@ creds.set_password(app.config["SAMBA_PASSWORD"])
 
 class ReusableForm(Form):
     #password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[0-9])(?=.*?[#!@$%^&*()\-_+={}[\]|\\:;"'<>,.?\/]).{8,}$""")])
-    password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""(?=^.{8,}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*""")])
+    password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp(r"(?=^.{8,}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*")])
     class Meta:
         csrf = True
         csrf_secret = app.config["CSRF_SECRET"]
@@ -120,15 +121,38 @@ def index():
             if form.validate():
                 if ("name" in saml_items) and ("surname" in saml_items):
                     if re.match(email_pattern, auth_data.nameid):
-                        print(request.form['password'])
-                        print(auth_data.nameid)
-                        print(saml_items["name"])
-                        print(saml_items["surname"])
-                        flash("Password set successfully")
+                        username = auth_data.nameid.split('@')[0]
+                        givenname = saml_items["name"]
+                        surname = saml_items["surname"]
+                        password = request.form['password']
+                        email = auth_data.nameid
+                        
+                        
+                        # set data in samba
+                        while(True):
+                            try:
+                                samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email)
+                                flash("Password set successfully")
+                            except ldb.LdbError as e:
+                                print(e)
+                                try:
+                                    samdb.connect(url=app.config["SAMBA_URL"])
+                                    continue
+                                except ldb.LdbError as e:
+                                    print(e)
+                                    flash("Error: Password set failed due to an internal error!")
+                                    break
+                                flash("Error: Password set failed due to an internal error!")
+                            except Exception as e:
+                                print(e)
+                                flash("Error: Password set failed due to an internal error!")
+                                break
+
+
                     else:
-                        flash("Error: Invalid e-mail address")
+                        flash("Error: E-Mail address is not valid as an Windows domain account name (does it contain any of \"/\\[]:;|=,+*?<> or other special characters?).")
                 else:
-                    flash("Error: Name or surname not set")
+                    flash("Error: Name or surname not set or contains invalid characters")
                     print(saml_items["name"])
                     print(saml_items["surname"])
             else:
