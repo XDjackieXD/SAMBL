@@ -136,6 +136,7 @@ def index():
                                 else:
                                     samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email)
                                 flash("Password set successfully")
+                                break
                             except ldb.LdbError as e:
                                 print(str(e))
 
