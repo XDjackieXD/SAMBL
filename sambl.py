@@ -75,6 +75,8 @@ app.config['SAML2_IDENTITY_PROVIDERS'] = [
 
 app.register_blueprint(sp.create_blueprint(), url_prefix='/saml/')
 
+email_pattern = re.compile(r"\"?([-a-zA-Z0-9.`?{}]+@\w+\.\w+)\"?")
+
 lp = LoadParm()
 creds = Credentials()
 creds.guess(lp)
@@ -98,7 +100,7 @@ creds.set_password(app.config["SAMBA_PASSWORD"])
 
 class ReusableForm(Form):
     #password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[0-9])(?=.*?[#!@$%^&*()\-_+={}[\]|\\:;"'<>,.?\/]).{8,}$""")])
-    password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""(?=^[A-Za-z\d!@#\$%\^&\*\(\)_\+=]{8,20}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+=])(?=.*[a-z])|(?=.*[!@#\$%\^&\*\(\)_\+=])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[!@#\$%\^&\*\(\)_\+=]))^.*""")])
+    password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""(?=^.{8,}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*""")])
     class Meta:
         csrf = True
         csrf_secret = app.config["CSRF_SECRET"]
@@ -117,7 +119,7 @@ def index():
         if request.method == 'POST':
             if form.validate():
                 if ("name" in saml_items) and ("surname" in saml_items):
-                    if re.search('^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,}$', auth_data.nameid):
+                    if re.match(email_pattern, auth_data.nameid):
                         print(request.form['password'])
                         print(auth_data.nameid)
                         print(saml_items["name"])
@@ -132,15 +134,10 @@ def index():
             else:
                 flash('Error: Password does not meet complexity criteria')
 
-        #attrs = '<dl>{}</dl>'.format(''.join(
-        #    f'<dt>{attr}</dt><dd>{value}</dd>'
-        #    for attr, value in auth_data.attributes.items()))
-
         #logout_url = url_for('flask_saml2_sp.logout')
         #logout = f'<form action="{logout_url}" method="POST"><input type="submit" value="Log out"></form>'
 
         return render_template('set.html', form=form)
-        #return message + attrs + logout
     else:
         message = '<p>You are logged out.</p>'
 
