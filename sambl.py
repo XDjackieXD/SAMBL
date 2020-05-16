@@ -128,13 +128,20 @@ def index():
                         email = auth_data.nameid
                         
                         # set data in samba
+                        try_change = True
                         while(True):
                             try:
-                                samdb.setpassword(search_filter="samccountname="+username, password=password)
-                                #samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email)
+                                if try_change:
+                                    samdb.setpassword(search_filter="samaccountname="+username, password=password)
+                                else:
+                                    samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email)
                                 flash("Password set successfully")
                             except ldb.LdbError as e:
                                 print(str(e))
+
+                                if ("Unable to find user" in str(e)):
+                                    try_change = False
+                                    continue
 
                                 if ("LDAP_ENTRY_ALREADY_EXISTS" in str(e)):
                                     flash("Error: Password set failed (user already exists and create was tried instead of modify).")
