@@ -127,7 +127,6 @@ def index():
                         password = request.form['password']
                         email = auth_data.nameid
                         
-                        
                         # set data in samba
                         while(True):
                             try:
@@ -135,6 +134,11 @@ def index():
                                 flash("Password set successfully")
                             except ldb.LdbError as e:
                                 print(e)
+
+                                if ("LDAP_ENTRY_ALREADY_EXISTS" in e[1]):
+                                    flash("Error: Password set failed (user already exists and create was tried instead of modify).")
+                                    break
+
                                 try:
                                     samdb.connect(url=app.config["SAMBA_URL"])
                                     continue
@@ -147,7 +151,6 @@ def index():
                                 print(e)
                                 flash("Error: Password set failed due to an internal error!")
                                 break
-
 
                     else:
                         flash("Error: E-Mail address is not valid as an Windows domain account name (does it contain any of \"/\\[]:;|=,+*?<> or other special characters?).")
