@@ -130,7 +130,8 @@ def index():
                         # set data in samba
                         while(True):
                             try:
-                                samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email)
+                                samdb.setpassword(search_filter="samccountname="+username, password=password)
+                                #samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email)
                                 flash("Password set successfully")
                             except ldb.LdbError as e:
                                 print(str(e))
