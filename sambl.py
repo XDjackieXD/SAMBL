@@ -168,9 +168,6 @@ def index():
             else:
                 flash('Error: Password does not meet complexity criteria')
 
-        #logout_url = url_for('flask_saml2_sp.logout')
-        #logout = f'<form action="{logout_url}" method="POST"><input type="submit" value="Log out"></form>'
-
         return render_template('set.html', form=form)
     else:
         return render_template('login.html')

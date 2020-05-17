@@ -4,16 +4,7 @@
 
 <div class="container">
 	<h2>(re)set your password:</h2>
-	<form action="" method="post" role="form">
-		{{ form.csrf_token }}
-		{% if form.csrf_token.errors %}
-    			<div class="warning">You have submitted an invalid CSRF token</div>
-		{% endif %}
-		<div class="form-group">
-			<input type="password" class="form-control" id="password" name="password" placeholder="Enter a password." required>
-		</div>
-		<button type="submit" class="btn btn-success">Set</button>
-	</form>
+	
 	{% with messages = get_flashed_messages(with_categories=true) %}
 		{% if messages %}
 			{% for message in messages %}
@@ -31,4 +22,16 @@
 			{% endfor %}
 		{% endif %}
 	{% endwith %}
+	
+	<form action="" method="post" role="form">
+		{{ form.csrf_token }}
+		{% if form.csrf_token.errors %}
+    			<div class="warning">You have submitted an invalid CSRF token</div>
+		{% endif %}
+		<div class="form-group">
+			<input type="password" class="form-control" id="password" name="password" placeholder="Enter a password." required>
+		</div>
+		<button type="submit" class="btn btn-success">Set</button>
+	</form>
+	<a class="btn btn-primary" href="{{ url_for('flask_saml2_sp.logout') }}" role="button">Log out</a>
 </div>
