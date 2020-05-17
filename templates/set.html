@@ -33,5 +33,7 @@
 		</div>
 		<button type="submit" class="btn btn-success">Set</button>
 	</form>
-	<a class="btn btn-primary" href="{{ url_for('flask_saml2_sp.logout') }}" role="button">Log out</a>
+	<form action="{{ url_for('flask_saml2_sp.logout') }}" method="post" role="form"> 
+		<button type="submit" class="btn btn-primary">Log out</button>
+	</form>
 </div>
