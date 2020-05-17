@@ -140,10 +140,6 @@ def index():
                             except ldb.LdbError as e:
                                 print(str(e))
 
-                                if ("Unable to find user" in str(e)):
-                                    print("Trying to create new user...")
-                                    try_change = False
-                                    continue
 
                                 if ("LDAP_ENTRY_ALREADY_EXISTS" in str(e)):
                                     flash("Error: Password set failed (user already exists and create was tried instead of modify).")
@@ -158,6 +154,15 @@ def index():
                                     break
                                 flash("Error: Password set failed due to an internal error!")
                             except Exception as e:
+                                exc_type, exc_obj, exc_tb = sys.exc_info()
+                                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                                print(exc_type, fname, exc_tb.tb_lineno)
+
+                                if ("Unable to find user" in str(e)):
+                                    print("Trying to create new user...")
+                                    try_change = False
+                                    continue
+
                                 print(e)
                                 flash("Error: Password set failed due to an internal error!")
                                 break
