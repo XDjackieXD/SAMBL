@@ -141,6 +141,7 @@ def index():
                                 print(str(e))
 
                                 if ("Unable to find user" in str(e)):
+                                    print("Trying to create new user...")
                                     try_change = False
                                     continue
 
