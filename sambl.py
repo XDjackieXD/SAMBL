@@ -91,16 +91,13 @@ except ldb.LdbError as e:
     sys.exit()
 
 
+# Get exception type:
 #except Exception as e:
 #    exc_type, exc_obj, exc_tb = sys.exc_info()
 #    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
 #    print(exc_type, fname, exc_tb.tb_lineno)
 
-#sambl.samdb.newuser(username="test", password="Changeme!", surname="testsn", givenname="testgiven", mailaddress="test@racing.tuwien.ac.at")
-#samdb.connect(url=sambl.config.url)
-
 class ReusableForm(Form):
-    #password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp("""^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[0-9])(?=.*?[#!@$%^&*()\-_+={}[\]|\\:;"'<>,.?\/]).{8,}$""")])
     password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp(r"(?=^.{8,}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*")])
     class Meta:
         csrf = True
@@ -138,9 +135,6 @@ def index():
                                 flash("Password set successfully")
                                 break
                             except ldb.LdbError as e:
-                                print(str(e))
-
-
                                 if ("LDAP_ENTRY_ALREADY_EXISTS" in str(e)):
                                     flash("Error: Password set failed (user already exists and create was tried instead of modify).")
                                     break
@@ -152,12 +146,10 @@ def index():
                                     print(str(ee))
                                     flash("Error: Password set failed (could not connect to samba server)!")
                                     break
+
+                                print(str(e))
                                 flash("Error: Password set failed due to an internal error!")
                             except Exception as e:
-                                exc_type, exc_obj, exc_tb = sys.exc_info()
-                                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                                print(exc_type, fname, exc_tb.tb_lineno)
-
                                 if ("Unable to find user" in str(e)):
                                     print("Trying to create new user...")
                                     try_change = False
