@@ -126,6 +126,7 @@ def index():
                         
                         # set data in samba
                         try_change = True
+                        tried_reconnect = False
                         while(True):
                             try:
                                 if try_change:
@@ -139,16 +140,19 @@ def index():
                                     flash("Error: Password set failed (user already exists and create was tried instead of modify).")
                                     break
 
-                                try:
-                                    samdb.connect(url=app.config["SAMBA_URL"])
-                                    continue
-                                except ldb.LdbError as ee:
-                                    print(str(ee))
-                                    flash("Error: Password set failed (could not connect to samba server)!")
-                                    break
+                                if not tried_reconnect:
+                                    tried_reconnect = True
+                                    try:
+                                        samdb.connect(url=app.config["SAMBA_URL"])
+                                        continue
+                                    except ldb.LdbError as ee:
+                                        print(str(ee))
+                                        flash("Error: Password set failed (could not connect to samba server)!")
+                                        break
 
                                 print(str(e))
                                 flash("Error: Password set failed due to an internal error!")
+                                break
                             except Exception as e:
                                 if ("Unable to find user" in str(e)):
                                     print("Trying to create new user...")
