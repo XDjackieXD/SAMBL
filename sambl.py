@@ -173,12 +173,7 @@ def index():
 
         return render_template('set.html', form=form)
     else:
-        message = '<p>You are logged out.</p>'
-
-        login_url = url_for('flask_saml2_sp.login')
-        link = f'<p><a href="{login_url}">Log in to continue</a></p>'
-
-        return message + link
+        return render_template('login.html')
 
 
 
