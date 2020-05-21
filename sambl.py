@@ -151,7 +151,7 @@ def index():
                                     file.seek(0)
                                     file.truncate()
                                     file.write(str(uidnumber+1))
-                                    if len(samdb.search(app.config["SAMBA_USER_BASEDN"], ldb.SCOPE_SUBTREE, "uidNumber="+uidnumber, ['uidNumber'])) == 0:
+                                    if len(samdb.search(app.config["SAMBA_USER_BASEDN"], ldb.SCOPE_SUBTREE, "uidNumber="+str(uidnumber), ['uidNumber'])) == 0:
                                         samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email, uidnumber=uidnumber)
                                         flash("Password set successfully")
                                     else:
