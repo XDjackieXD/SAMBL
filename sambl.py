@@ -124,44 +124,53 @@ def index():
                         password = request.form['password']
                         email = auth_data.nameid
                         
-                        # set data in samba
-                        try_change = True
-                        tried_reconnect = False
-                        while(True):
+                        if len(samdb.search(app.config["SAMBA_USER_BASEDN"], ldb.SCOPE_SUBTREE, "samaccountname=" + username, ['samaccountname'])) >=1:
+                            # user exists. try to change password
                             try:
-                                if try_change:
-                                    samdb.setpassword(search_filter="samaccountname="+username, password=password)
-                                else:
-                                    samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email)
-                                flash("Password set successfully")
-                                break
+                                samdb.setpassword(search_filter="samaccountname="+username, password=password)
+                                flash("Password updated successfully")
                             except ldb.LdbError as e:
-                                if ("LDAP_ENTRY_ALREADY_EXISTS" in str(e)):
-                                    flash("Error: Password set failed (user already exists and create was tried instead of modify).")
-                                    break
-
-                                if not tried_reconnect:
-                                    tried_reconnect = True
-                                    try:
-                                        samdb.connect(url=app.config["SAMBA_URL"])
-                                        continue
-                                    except ldb.LdbError as ee:
-                                        print(str(ee))
-                                        flash("Error: Password set failed (could not connect to samba server)!")
-                                        break
-
                                 print(str(e))
-                                flash("Error: Password set failed due to an internal error!")
-                                break
+                                flash("Error: Password set failed (internal error)!")
+                                try:
+                                    samdb.connect(url=app.config["SAMBA_URL"])
+                                    flash("Reconnected to Samba server. Please try again now.")
+                                except ldb.LdbError as ee:
+                                    print(str(ee))
+                                    flash("Error: Could not connect to Samba server. Please try again in a moment!")
+                                return render_template('set.html', form=form)
                             except Exception as e:
-                                if ("Unable to find user" in str(e)):
-                                    print("Trying to create new user...")
-                                    try_change = False
-                                    continue
-
                                 print(e)
-                                flash("Error: Password set failed due to an internal error!")
-                                break
+                                flash("Error: Password set failed (internal error)!")
+                                return render_template('set.html', form=form)
+                        else:
+                            # user did not exist yet. create new one!
+                            try:
+                                with open(app.config["SAMBA_UIDNUM_FILE"], 'r+') as file:
+                                    uidnumber = int(file.readline())
+                                    file.seek(0)
+                                    file.truncate()
+                                    file.write(str(uidnumber+1))
+                                    if len(samdb.search(app.config["SAMBA_USER_BASEDN"], ldb.SCOPE_SUBTREE, "uidNumber="+uidnumber, ['uidNumber'])) == 0:
+                                        samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email, uidnumber=uidnumber)
+                                        flash("Password set successfully")
+                                    else:
+                                        print("uidNumber already in use. Check " + app.config["SAMBA_UIDNUM_FILE"] + " as the number in there doesn't seem to be correct (should be next free uidnumber).")
+                                        flash("Error: Password set failed (internal error)!")
+                            except ldb.LdbError as e:
+                                print(str(e))
+                                flash("Error: Password set failed (internal error)!")
+                                try:
+                                    samdb.connect(url=app.config["SAMBA_URL"])
+                                    flash("Reconnected to Samba server. Please try again now.")
+                                except ldb.LdbError as ee:
+                                    print(str(ee))
+                                    flash("Error: Could not connect to Samba server. Please try again in a moment!")
+                                return render_template('set.html', form=form)
+                            except Exception as e:
+                                print(e)
+                                flash("Error: Password set failed (internal error)!")
+                                return render_template('set.html', form=form)
 
                     else:
                         flash("Error: E-Mail address is not valid as an Windows domain account name (does it contain any of \"/\\[]:;|=,+*?<> or other special characters?).")
