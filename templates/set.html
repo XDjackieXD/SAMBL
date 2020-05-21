@@ -1,39 +1,55 @@
-<title>Samba SAML Self Service</title>
-<link rel="stylesheet" media="screen" href="static/css/bootstrap.min.css">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" media="screen" href="static/css/bootstrap.min.css">
+		<title>Samba SAML Self Service</title>
+	</head>
+	<body>
+		<div class="container">
+			<h2>(re)set your password:</h2>
+			
+			{% with messages = get_flashed_messages(with_categories=true) %}
+				{% if messages %}
+					{% for message in messages %}
+						{% if "Error" not in message[1]: %}
+							<div class="alert alert-info">
+								<strong>Success! </strong>{{ message[1] }}
+							</div>
+						{% endif %}
 
-<div class="container">
-	<h2>(re)set your password:</h2>
-	
-	{% with messages = get_flashed_messages(with_categories=true) %}
-		{% if messages %}
-			{% for message in messages %}
-				{% if "Error" not in message[1]: %}
-					<div class="alert alert-info">
-						<strong>Success! </strong>{{ message[1] }}
-					</div>
+						{% if "Error" in message[1]: %}
+							<div class="alert alert-warning">
+								{{ message[1] }}
+							</div>
+						{% endif %}
+					{% endfor %}
 				{% endif %}
+			{% endwith %}
+			
+			<p>Password must have three of these four categories and a minimum of 8 characters:<br>
+				<ul>
+					<li>Lower-case letters</li>
+					<li>Upper-case letters</li>
+					<li>Numbers</li>
+					<li>Special characters</li>
+				</ul>
+			</p>
 
-				{% if "Error" in message[1]: %}
-					<div class="alert alert-warning">
-						{{ message[1] }}
-					</div>
+			<form action="" method="post" role="form">
+				{{ form.csrf_token }}
+				{% if form.csrf_token.errors %}
+					<div class="warning">You have submitted an invalid CSRF token</div>
 				{% endif %}
-			{% endfor %}
-		{% endif %}
-	{% endwith %}
-	
-	<form action="" method="post" role="form">
-		{{ form.csrf_token }}
-		{% if form.csrf_token.errors %}
-    			<div class="warning">You have submitted an invalid CSRF token</div>
-		{% endif %}
-		<div class="form-group">
-			<input type="password" class="form-control" id="password" name="password" placeholder="Enter a password." required>
+				<div class="form-group">
+					<input type="password" class="form-control" id="password" name="password" placeholder="Enter a password." required>
+				</div>
+				<button type="submit" class="btn btn-success">Set</button>
+			</form>
+			<form action="{{ url_for('flask_saml2_sp.logout') }}" method="post" role="form"> 
+				<button type="submit" class="btn btn-primary">Log out</button>
+			</form>
 		</div>
-		<button type="submit" class="btn btn-success">Set</button>
-	</form>
-	<form action="{{ url_for('flask_saml2_sp.logout') }}" method="post" role="form"> 
-		<button type="submit" class="btn btn-primary">Log out</button>
-	</form>
-</div>
+	</body>
+</html>
