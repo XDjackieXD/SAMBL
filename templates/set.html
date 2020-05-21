@@ -28,14 +28,13 @@
 				{% endif %}
 			{% endwith %}
 			
-			<p>Password must have three of these four categories and a minimum of 8 characters:<br>
-				<ul>
-					<li>Lower-case letters</li>
-					<li>Upper-case letters</li>
-					<li>Numbers</li>
-					<li>Special characters</li>
-				</ul>
-			</p>
+			<p>Password must have three of these four categories and a minimum of 8 characters:</p>
+			<ul>
+				<li>Lower-case letters</li>
+				<li>Upper-case letters</li>
+				<li>Numbers</li>
+				<li>Special characters</li>
+			</ul>
 
 			<form action="" method="post" role="form">
 				{{ form.csrf_token }}
