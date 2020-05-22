@@ -128,6 +128,8 @@ def index():
                             # user exists. try to change password
                             try:
                                 samdb.setpassword(search_filter="samaccountname="+username, password=password)
+                                setexpiry(search_filter="samaccountname="+username, expiry_seconds=31536000) # one year
+                                enable_account(search_filter="samaccountname="+username)
                                 flash("Password updated successfully")
                             except ldb.LdbError as e:
                                 print(str(e))
@@ -153,6 +155,8 @@ def index():
                                     file.write(str(uidnumber+1))
                                     if len(samdb.search(app.config["SAMBA_USER_BASEDN"], ldb.SCOPE_SUBTREE, "uidNumber="+str(uidnumber), ['uidNumber'])) == 0:
                                         samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email, uidnumber=uidnumber)
+                                        setexpiry(search_filter="samaccountname="+username, expiry_seconds=31536000) # one year
+                                        enable_account(search_filter="samaccountname="+username)
                                         flash("Password set successfully")
                                     else:
                                         print("uidNumber already in use. Check " + app.config["SAMBA_UIDNUM_FILE"] + " as the number in there doesn't seem to be correct (should be next free uidnumber).")
