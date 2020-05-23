@@ -1,0 +1,24 @@
+DEBUG = True
+SECRET_KEY = "blafoobar"
+CSRF_SECRET = "blafoobar"
+SERVER_NAME = "localhost:9000"
+SAML2_SP_CERTIFICATE = """-----BEGIN CERTIFICATE-----
+blafoo
+-----END CERTIFICATE-----"""
+SAML2_SP_PRIVATE_KEY = """-----BEGIN RSA PRIVATE KEY-----
+blafoo
+-----END RSA PRIVATE KEY-----"""
+
+SAML2_IDP_DISPLAY_NAME = "Samba Self Service"
+SAML2_IDP_ENTITY_ID = "idpentityid"
+SAML2_IDP_SSO_URL = "idpssourl"
+SAML2_IDP_SLO_URL = "idpslourl"
+SAML2_IDP_CERTIFICATE = """-----BEGIN CERTIFICATE-----
+blafoo
+-----END CERTIFICATE-----"""
+
+SAMBA_USER = "sambl"
+SAMBA_PASSWORD = "sambluserpassword"
+SAMBA_URL = "ldap://127.0.0.1:3890"
+SAMBA_USER_BASEDN = "CN=Users,DC=ad,DC=example,DC=org"
+SAMBA_UIDNUM_FILE = "/var/lib/sambl/uidnumber.txt"
