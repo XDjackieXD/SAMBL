@@ -124,57 +124,70 @@ def index():
                         password = request.form['password']
                         email = auth_data.nameid
                         
-                        if len(samdb.search(app.config["SAMBA_USER_BASEDN"], ldb.SCOPE_SUBTREE, "samaccountname=" + username, ['samaccountname'])) >=1:
-                            # user exists. try to change password
-                            try:
-                                samdb.setpassword(search_filter="samaccountname="+username, password=password)
-                                samdb.setexpiry(search_filter="samaccountname="+username, expiry_seconds=31536000) # one year
-                                samdb.enable_account(search_filter="samaccountname="+username)
-                                flash("Password updated successfully")
-                            except ldb.LdbError as e:
-                                print(str(e))
-                                flash("Error: Password set failed (internal error)!")
+                        try:
+                            if len(samdb.search(app.config["SAMBA_USER_BASEDN"], ldb.SCOPE_SUBTREE, "samaccountname=" + username, ['samaccountname'])) >=1:
+                                # user exists. try to change password
                                 try:
-                                    samdb.connect(url=app.config["SAMBA_URL"])
-                                    flash("Reconnected to Samba server. Please try again now.")
-                                except ldb.LdbError as ee:
-                                    print(str(ee))
-                                    flash("Error: Could not connect to Samba server. Please try again in a moment!")
-                                return render_template('set.html', form=form)
-                            except Exception as e:
-                                print(e)
-                                flash("Error: Password set failed (internal error)!")
-                                return render_template('set.html', form=form)
-                        else:
-                            # user did not exist yet. create new one!
-                            try:
-                                with open(app.config["SAMBA_UIDNUM_FILE"], 'r+') as file:
-                                    uidnumber = int(file.readline())
-                                    file.seek(0)
-                                    file.truncate()
-                                    file.write(str(uidnumber+1))
-                                    if len(samdb.search(app.config["SAMBA_USER_BASEDN"], ldb.SCOPE_SUBTREE, "uidNumber="+str(uidnumber), ['uidNumber'])) == 0:
-                                        samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email, uidnumber=uidnumber)
-                                        samdb.setexpiry(search_filter="samaccountname="+username, expiry_seconds=31536000) # one year
-                                        samdb.enable_account(search_filter="samaccountname="+username)
-                                        flash("Password set successfully")
-                                    else:
-                                        print("uidNumber already in use. Check " + app.config["SAMBA_UIDNUM_FILE"] + " as the number in there doesn't seem to be correct (should be next free uidnumber).")
-                                        flash("Error: Password set failed (internal error)!")
-                            except ldb.LdbError as e:
-                                print(str(e))
-                                flash("Error: Password set failed (internal error)!")
+                                    samdb.setpassword(search_filter="samaccountname="+username, password=password)
+                                    samdb.setexpiry(search_filter="samaccountname="+username, expiry_seconds=31536000) # one year
+                                    samdb.enable_account(search_filter="samaccountname="+username)
+                                    flash("Password updated successfully")
+                                except ldb.LdbError as e:
+                                    print(str(e))
+                                    flash("Error: Password set failed (internal error)!")
+                                    try:
+                                        samdb.connect(url=app.config["SAMBA_URL"])
+                                        flash("Reconnected to Samba server. Please try again now.")
+                                    except ldb.LdbError as ee:
+                                        print(str(ee))
+                                        flash("Error: Could not connect to Samba server. Please try again in a moment!")
+                                    return render_template('set.html', form=form)
+                                except Exception as e:
+                                    print(e)
+                                    flash("Error: Password set failed (internal error)!")
+                                    return render_template('set.html', form=form)
+                            else:
+                                # user did not exist yet. create new one!
                                 try:
-                                    samdb.connect(url=app.config["SAMBA_URL"])
-                                    flash("Reconnected to Samba server. Please try again now.")
-                                except ldb.LdbError as ee:
-                                    print(str(ee))
-                                    flash("Error: Could not connect to Samba server. Please try again in a moment!")
-                                return render_template('set.html', form=form)
-                            except Exception as e:
-                                print(e)
-                                flash("Error: Password set failed (internal error)!")
-                                return render_template('set.html', form=form)
+                                    with open(app.config["SAMBA_UIDNUM_FILE"], 'r+') as file:
+                                        uidnumber = int(file.readline())
+                                        file.seek(0)
+                                        file.truncate()
+                                        file.write(str(uidnumber+1))
+                                        if len(samdb.search(app.config["SAMBA_USER_BASEDN"], ldb.SCOPE_SUBTREE, "uidNumber="+str(uidnumber), ['uidNumber'])) == 0:
+                                            samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email, uidnumber=uidnumber)
+                                            samdb.setexpiry(search_filter="samaccountname="+username, expiry_seconds=31536000) # one year
+                                            samdb.enable_account(search_filter="samaccountname="+username)
+                                            flash("Password set successfully")
+                                        else:
+                                            print("uidNumber already in use. Check " + app.config["SAMBA_UIDNUM_FILE"] + " as the number in there doesn't seem to be correct (should be next free uidnumber).")
+                                            flash("Error: Password set failed (internal error)!")
+                                except ldb.LdbError as e:
+                                    print(str(e))
+                                    flash("Error: Password set failed (internal error)!")
+                                    try:
+                                        samdb.connect(url=app.config["SAMBA_URL"])
+                                        flash("Reconnected to Samba server. Please try again now.")
+                                    except ldb.LdbError as ee:
+                                        print(str(ee))
+                                        flash("Error: Could not connect to Samba server. Please try again in a moment!")
+                                    return render_template('set.html', form=form)
+                                except Exception as e:
+                                    print(e)
+                                    flash("Error: Password set failed (internal error)!")
+                                    return render_template('set.html', form=form)
+                        except ldb.LdbError as e:
+                            print(str(e))
+                            flash("Error: Password set failed (internal error)!")
+                            try:
+                                samdb.connect(url=app.config["SAMBA_URL"])
+                                flash("Reconnected to Samba server. Please try again now.")
+                            except ldb.LdbError as ee:
+                                print(str(ee))
+                                flash("Error: Could not connect to Samba server. Please try again in a moment!")
+                        except Exception as e:
+                            print(e)
+                            flash("Error: Password set failed (internal error)!")
 
                     else:
                         flash("Error: E-Mail address is not valid as an Windows domain account name (does it contain any of \"/\\[]:;|=,+*?<> or other special characters?).")
