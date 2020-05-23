@@ -125,6 +125,17 @@ def index():
                         email = auth_data.nameid
                         
                         try:
+                            try:
+                                samdb.connect(url=app.config["SAMBA_URL"])
+                            except ldb.LdbError as e:
+                                print(str(e))
+                                flash("Error: Could not connect to Samba server. Please try again in a moment!")
+                                return render_template('set.html', form=form)
+                            except Exception as e:
+                                print(e)
+                                flash("Error: Password set failed (internal error)!")
+                                return render_template('set.html', form=form)
+
                             if len(samdb.search(app.config["SAMBA_USER_BASEDN"], ldb.SCOPE_SUBTREE, "samaccountname=" + username, ['samaccountname'])) >=1:
                                 # user exists. try to change password
                                 try:
@@ -135,12 +146,6 @@ def index():
                                 except ldb.LdbError as e:
                                     print(str(e))
                                     flash("Error: Password set failed (internal error)!")
-                                    try:
-                                        samdb.connect(url=app.config["SAMBA_URL"])
-                                        flash("Reconnected to Samba server. Please try again now.")
-                                    except ldb.LdbError as ee:
-                                        print(str(ee))
-                                        flash("Error: Could not connect to Samba server. Please try again in a moment!")
                                     return render_template('set.html', form=form)
                                 except Exception as e:
                                     print(e)
@@ -165,12 +170,6 @@ def index():
                                 except ldb.LdbError as e:
                                     print(str(e))
                                     flash("Error: Password set failed (internal error)!")
-                                    try:
-                                        samdb.connect(url=app.config["SAMBA_URL"])
-                                        flash("Reconnected to Samba server. Please try again now.")
-                                    except ldb.LdbError as ee:
-                                        print(str(ee))
-                                        flash("Error: Could not connect to Samba server. Please try again in a moment!")
                                     return render_template('set.html', form=form)
                                 except Exception as e:
                                     print(e)
@@ -179,12 +178,6 @@ def index():
                         except ldb.LdbError as e:
                             print(str(e))
                             flash("Error: Password set failed (internal error)!")
-                            try:
-                                samdb.connect(url=app.config["SAMBA_URL"])
-                                flash("Reconnected to Samba server. Please try again now.")
-                            except ldb.LdbError as ee:
-                                print(str(ee))
-                                flash("Error: Could not connect to Samba server. Please try again in a moment!")
                         except Exception as e:
                             print(e)
                             flash("Error: Password set failed (internal error)!")
