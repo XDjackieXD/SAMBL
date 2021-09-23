@@ -8,7 +8,17 @@ It expects that no other entity creates samba accounts as it uses a file to keep
 From SAML it expects the additional attributes `name` and `surname`.
 The Username has to be a valid email address (if it isn't you'll have to change the line `username = auth_data.nameid.split('@')[0]` in `sambl.py` to match your SAML username to samba username mapping.
   
-Dependencies are the samba python API, flask, flask-saml2, flask-wtf, werkzeug and urllib3
-  
 As this piece of software is feature complete for our usecase it won't see updates often.
 I will maintain functionality with new samba and python versions though as we are actively using this piece of software for our internal fileserver.
+
+## Dependencies
+
+- python
+- Samba-Python-API
+- python-flask
+- python-flask-saml2
+- python-flask-wtf
+- python-werkzeug
+- python-urllib3
+- uwsgi
+- uwsgi-plugin-python

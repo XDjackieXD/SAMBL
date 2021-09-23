@@ -1,0 +1,20 @@
+[Unit]
+Description=uWSGI SAMBL
+After=syslog.target
+
+[Service]
+User=sambl
+Group=sambl
+Environment="SAMBL_SETTINGS=config.py"
+ExecStart=/usr/bin/uwsgi --disable-logging --need-plugin python --http 0.0.0.0:9000 --module sambl:app
+# change this to where you cloned SAMBL
+RuntimeDirectory=/home/sambl/SAMBL
+WorkingDirectory=/home/sambl/SAMBL
+Restart=always
+KillSignal=SIGQUIT
+Type=notify
+StandardError=syslog
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target
