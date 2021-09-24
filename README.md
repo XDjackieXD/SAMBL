@@ -11,6 +11,8 @@ The Username has to be a valid email address (if it isn't you'll have to change 
 As this piece of software is feature complete for our usecase it won't see updates often.
 I will maintain functionality with new samba and python versions though as we are actively using this piece of software for our internal fileserver.
 
+IMPORTANT: Please make sure that the reverse proxy pointing at this service sets the X-Forwarded-Proto header! (see NGINX example)
+
 ## Dependencies
 
 - python
