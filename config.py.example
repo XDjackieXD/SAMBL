@@ -1,6 +1,6 @@
 DEBUG = True
 SECRET_KEY = "blafoobar"
-CSRF_SECRET = "blafoobar"
+CSRF_SECRET = b'blafoobar'
 SERVER_NAME = "localhost:9000"
 SAML2_SP_CERTIFICATE = """-----BEGIN CERTIFICATE-----
 blafoo
