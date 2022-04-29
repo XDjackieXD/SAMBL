@@ -12,7 +12,7 @@ from flask_saml2.utils import certificate_from_string, private_key_from_string
 import urllib.parse as urlparse
 from urllib.parse import parse_qs
 from typing import Optional
-from wtforms import Form, TextField, TextAreaField, validators, StringField, SubmitField
+from wtforms import Form, StringField, TextAreaField, validators, StringField, SubmitField
 from wtforms.csrf.session import SessionCSRF
 
 import getpass
@@ -98,7 +98,7 @@ except ldb.LdbError as e:
 #    print(exc_type, fname, exc_tb.tb_lineno)
 
 class ReusableForm(Form):
-    password = TextField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp(r"(?=^.{8,}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*")])
+    password = StringField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp(r"(?=^.{8,}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*")])
     class Meta:
         csrf = True
         csrf_secret = app.config["CSRF_SECRET"]
