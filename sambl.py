@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import sys
-import os
 import re
 
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -15,15 +14,12 @@ from typing import Optional
 from wtforms import Form, StringField, TextAreaField, validators, StringField, SubmitField
 from wtforms.csrf.session import SessionCSRF
 
-import getpass
 import ldb
 from samba.auth import system_session
 from samba.credentials import Credentials
-from samba.dcerpc import security
-from samba.dcerpc.security import dom_sid
-from samba.ndr import ndr_pack, ndr_unpack
 from samba.param import LoadParm
 from samba.samdb import SamDB
+
 
 class SamblServiceProvider(ServiceProvider):
     def get_logout_return_url(self):
@@ -31,6 +27,7 @@ class SamblServiceProvider(ServiceProvider):
 
     def get_default_login_return_url(self):
         return url_for('index', _external=True)
+
 
 class SamblIdPHandler(IdPHandler):
     def make_login_request_url(self, relay_state: Optional[str] = None) -> str:
@@ -40,7 +37,7 @@ class SamblIdPHandler(IdPHandler):
 
         parameters = [('SAMLRequest', saml_request)]
         parsed = urlparse.urlparse(self.get_idp_sso_url())
-        for key,values in parse_qs(parsed.query).items():
+        for key, values in parse_qs(parsed.query).items():
             for value in values:
                 parameters.append((key, value))
         if relay_state is not None:
@@ -48,6 +45,7 @@ class SamblIdPHandler(IdPHandler):
 
         url = parsed.scheme + "://" + parsed.netloc + parsed.path
         return self._make_idp_request_url(url, parameters)
+
 
 sp = SamblServiceProvider()
 
@@ -92,20 +90,23 @@ except ldb.LdbError as e:
 
 
 # Get exception type:
-#except Exception as e:
+# except Exception as e:
 #    exc_type, exc_obj, exc_tb = sys.exc_info()
 #    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
 #    print(exc_type, fname, exc_tb.tb_lineno)
 
 class ReusableForm(Form):
     password = StringField('Password:', validators=[validators.DataRequired(), validators.Length(min=8, max=4096), validators.Regexp(r"(?=^.{8,}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*")])
+
     class Meta:
         csrf = True
         csrf_secret = app.config["CSRF_SECRET"]
         csrf_class = SessionCSRF
+
         @property
         def csrf_context(self):
             return session
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -123,7 +124,7 @@ def index():
                         surname = saml_items["surname"]
                         password = request.form['password']
                         email = auth_data.nameid
-                        
+
                         try:
                             try:
                                 samdb.connect(url=app.config["SAMBA_URL"])
@@ -136,11 +137,11 @@ def index():
                                 flash("Error: Password set failed (internal error)!")
                                 return render_template('set.html', form=form)
 
-                            if len(samdb.search(app.config["SAMBA_USER_BASEDN"], ldb.SCOPE_SUBTREE, "samaccountname=" + username, ['samaccountname'])) >=1:
+                            if len(samdb.search(app.config["SAMBA_USER_BASEDN"], ldb.SCOPE_SUBTREE, "samaccountname=" + username, ['samaccountname'])) >= 1:
                                 # user exists. try to change password
                                 try:
                                     samdb.setpassword(search_filter="samaccountname="+username, password=password)
-                                    samdb.setexpiry(search_filter="samaccountname="+username, expiry_seconds=31536000) # one year
+                                    samdb.setexpiry(search_filter="samaccountname="+username, expiry_seconds=31536000)  # one year
                                     samdb.enable_account(search_filter="samaccountname="+username)
                                     flash("Password updated successfully")
                                 except ldb.LdbError as e:
@@ -161,7 +162,7 @@ def index():
                                         file.write(str(uidnumber+1))
                                         if len(samdb.search(app.config["SAMBA_USER_BASEDN"], ldb.SCOPE_SUBTREE, "uidNumber="+str(uidnumber), ['uidNumber'])) == 0:
                                             samdb.newuser(username=username, password=password, surname=surname, givenname=givenname, mailaddress=email, uidnumber=uidnumber)
-                                            samdb.setexpiry(search_filter="samaccountname="+username, expiry_seconds=31536000) # one year
+                                            samdb.setexpiry(search_filter="samaccountname="+username, expiry_seconds=31536000)  # one year
                                             samdb.enable_account(search_filter="samaccountname="+username)
                                             flash("Password set successfully")
                                         else:
@@ -194,8 +195,6 @@ def index():
         return render_template('set.html', form=form)
     else:
         return render_template('login.html')
-
-
 
 
 if __name__ == '__main__':
