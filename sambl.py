@@ -83,7 +83,7 @@ creds.set_password(app.config["SAMBA_PASSWORD"])
 
 samdb = None
 try:
-    samdb = SamDB(url=app.config["SAMBA_URL"], session_info=system_session(),credentials=creds, lp=lp)
+    samdb = SamDB(url=app.config["SAMBA_URL"], session_info=system_session(), credentials=creds, lp=lp)
 except ldb.LdbError as e:
     print(e)
     sys.exit()
@@ -110,6 +110,7 @@ class ReusableForm(Form):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    global samdb
     if sp.is_user_logged_in():
         auth_data = sp.get_auth_data_in_session()
         saml_items = auth_data.attributes
@@ -127,7 +128,10 @@ def index():
 
                         try:
                             try:
-                                samdb.connect(url=app.config["SAMBA_URL"])
+                                if samdb.get_config_basedn() == None:
+                                    print("No connection: Trying to reconnect")
+                                    samdb.disconnect()
+                                    samdb = SamDB(url=app.config["SAMBA_URL"], session_info=system_session(), credentials=creds, lp=lp)
                             except ldb.LdbError as e:
                                 print(str(e))
                                 flash("Error: Could not connect to Samba server. Please try again in a moment!")
